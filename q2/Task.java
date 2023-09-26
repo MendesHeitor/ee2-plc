@@ -1,4 +1,3 @@
-// Task.java
 import java.util.*;
 
 public class Task {
@@ -16,7 +15,6 @@ public class Task {
         return id;
     }
 
-    // Checks if the task has any dependency to be executed
     public boolean canStart(List<Task> tasks) {
         return tasks.stream().noneMatch(t -> dependencies.contains(t.id));
     }
