@@ -7,15 +7,15 @@ import System.IO
 sender :: MVar String -> Int -> IO ()
 sender queue n =
     forM_ [1..n] $ \i -> do
-        putMVar queue "Ping"
-        putStrLn "Sent: Ping"
+        putMVar queue " Pong!"
+        putStrLn "Ping!"
         threadDelay 2
 
 receiver :: MVar String -> Int -> IO ()
 receiver queue n =
     forM_ [1..n] $ \i -> do
         msg <- takeMVar queue
-        putStrLn ("Received: " ++ msg)
+        putStrLn (msg)
         threadDelay 2
 
 main :: IO ()

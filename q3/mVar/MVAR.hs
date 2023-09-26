@@ -7,16 +7,6 @@ import Control.Concurrent (threadDelay)
 data Vaga = PCD | Comum deriving (Show, Eq)
 data Carro = CarroPCD Int | CarroComum Int deriving (Show, Eq)
 
-
-waitThreads :: MVar Int -> IO ()
-waitThreads fim = 
-  do f <- takeMVar fim
-     if (f > 0) then
-         do putMVar fim f
-            waitThreads fim
-       else 
-           return ()
-
 pegarVaga :: Vaga -> [Vaga] -> (Maybe Vaga, [Vaga])
 pegarVaga _ [] = (Nothing, [])
 pegarVaga vaga (x:xs)
@@ -24,38 +14,49 @@ pegarVaga vaga (x:xs)
     | otherwise = let (v, ys) = pegarVaga vaga xs in (v, x : ys)
 
 
-processarCarro :: MVar [Vaga] -> Carro -> IO ()
-processarCarro vagasMVar carro = do
+monitorarCarro :: MVar [Vaga] -> Carro -> IO ()
+monitorarCarro vagasMVar carro = do
     vagas <- takeMVar vagasMVar 
 
     case carro of
         CarroPCD i -> do
-            putStrLn "Carro PCD: Realizar processamento específico para PCD"
-            putMVar vagasMVar vagas
-
-        CarroComum i -> do
-            (vaga, vagasAtualizadas) <- pegarVaga Comum vagas
-            case vaga of
-                Just vaga -> do
-                    putMVar vagasMVar vagasAtualizadas
-                    putStrLn $ "Carro comum " ++ show i ++ " pegou vaga " ++ show vaga
-                    threadDelay 1000
-                    putStrLn $ "Carro comum " ++ show i ++ " liberou vaga " ++ show vaga
-                    vagas <- takeMVar vagasMVar
-                    putMVar vagasMVar (vaga:vagas)
+            let (mVaga, vagasAtualizadas) = pegarVaga PCD vagas
+            case mVaga of
+                Just obtainedVaga -> do
+                    case obtainedVaga of
+                        PCD -> do
+                            putMVar vagasMVar vagasAtualizadas
+                            putStrLn $ "Carro PCD " ++ show i ++ " pegou vaga " ++ show obtainedVaga
+                            threadDelay 1000
+                            putStrLn $ "Carro PCD " ++ show i ++ " liberou vaga " ++ show obtainedVaga
+                            vagas <- takeMVar vagasMVar
+                            putMVar vagasMVar (obtainedVaga:vagas)
+                        Comum -> do
+                            putMVar vagasMVar vagasAtualizadas
+                            putStrLn $ "Carro PCD " ++ show i ++ " pegou vaga " ++ show obtainedVaga
+                            threadDelay 1500
+                            putStrLn $ "Carro PCD " ++ show i ++ " liberou vaga " ++ show obtainedVaga
+                            vagas <- takeMVar vagasMVar
+                            putMVar vagasMVar (obtainedVaga:vagas)
                 Nothing -> do
                     putMVar vagasMVar vagas
+                    monitorarCarro vagasMVar carro
+
+        CarroComum i -> do
+            let (mVaga, vagasAtualizadas) = pegarVaga Comum vagas
+            case mVaga of
+                Just obtainedVaga -> do
+                    putMVar vagasMVar vagasAtualizadas
+                    putStrLn $ "Carro comum " ++ show i ++ " pegou vaga " ++ show obtainedVaga
                     threadDelay 1000
-                    processarCarro vagasMVar carro
+                    putStrLn $ "Carro comum " ++ show i ++ " liberou vaga " ++ show obtainedVaga
+                    vagas <- takeMVar vagasMVar
+                    putMVar vagasMVar (obtainedVaga:vagas)
+                Nothing -> do
+                    putMVar vagasMVar vagas
+                    monitorarCarro vagasMVar carro
+
            
-
-
-
-
-
-
-
-
 main :: IO ()
 main = do
 
@@ -64,16 +65,16 @@ main = do
 
     putStrLn "Digite o número K de vagas:"
     k <- readLn
-    
-    vagas <- newMVar (replicate (k `div` 10) PCD ++ replicate (9 * k `div` 10) Comum)
 
-    fim <- newMVar n
+    let vagasPCD = k `div` 10
+    let vagasComum = k - vagasPCD
+    
+    vagas <- newMVar (replicate vagasPCD PCD ++ replicate vagasComum Comum)
 
     forM_ [1..n] $ \i ->
         if i <= n `div` 5 then
-            forkIO (monitorarCarro (CarroPCD i) vagas)
+            forkIO (monitorarCarro vagas (CarroPCD i))
         else
-            forkIO (monitorarCarro (CarroComum i) vagas)
+            forkIO (monitorarCarro vagas (CarroComum i))
 
-    waitThreads fim
-    
+    threadDelay (n * 1000000)

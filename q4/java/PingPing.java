@@ -17,7 +17,6 @@ public class PingPing {
                 for (int i = 0; i < N; i++) {
                     queue.put("Ping");
                     System.out.println("Sent: Ping");
-                    Thread.sleep(5); // pequeno atraso para melhorar a visualização
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -29,7 +28,6 @@ public class PingPing {
                 for (int i = 0; i < N; i++) {
                     String msg = queue.take();
                     System.out.println("Received: " + msg);
-                    Thread.sleep(5); // pequeno atraso para melhorar a visualização
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
