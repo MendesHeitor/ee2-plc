@@ -1,0 +1,42 @@
+1 Caso (4 conquistando as duas pistas) :
+    Entrada:
+        3
+        1000
+        2500
+        2500
+        2
+        2500
+        2500
+        2
+        
+    Saida:
+        1000 - 1 entra
+        1500 - 1 sai
+        2500 - (4,5) entra
+        3000 - (4,5) sai 3000 e (2,3) entra
+        3500 - (2,3) sai 
+
+
+
+2 Caso (Sem disputas simultâneas):
+
+    Entrada:
+    
+        3
+        1000
+        1500
+        2000
+        2
+        2500
+        3000
+        1
+
+    Saida:
+        1000 - 1 entra 
+        1500 - 1 sai  e 2 entra
+        2000 - 2 sai e 3 entra
+        2500 - 3 sai e 4 entra
+        3000 - 4 sai e 5 entra
+        3500 - 5 sai
+
+
